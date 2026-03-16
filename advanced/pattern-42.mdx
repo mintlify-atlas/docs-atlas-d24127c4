@@ -1,0 +1,111 @@
+---
+title: "The 42 pattern"
+description: "A-Maze-ing hides a '42' shape in the center of large enough mazes."
+---
+
+When the maze is at least **9 columns wide** and **7 rows tall**, A-Maze-ing embeds a "42" digit shape in the center as a protected island of solid walls. Surrounding passages are carved normally by the DFS algorithm, but the 42-pattern cells are never touched — making the shape visible in the finished maze.
+
+## How it works
+
+The pattern is applied during initialization in `_set_pattern_42()` (generator.py:117). Each pattern cell is added to the `__visited` grid before the DFS begins. Because the DFS only carves into unvisited cells, these walls are never removed.
+
+The cells are also stored in `__protected`, which prevents the non-perfect algorithm from removing walls through them later.
+
+<Note>
+  The pattern is visually apparent only after maze generation — the walls of the "42" shape remain intact while surrounding walls are carved normally by the DFS.
+</Note>
+
+## Pattern arrays
+
+Two patterns are defined: one for odd-width mazes and one for even-width mazes.
+
+```python generator.py
+self.__impar_pattern = [[(0, 0),         (0, 2), (0, 4), (0, 5), (0, 6)],
+                    [(1, 0),         (1, 2),                 (1, 6)],
+                    [(2, 0), (2, 1), (2, 2), (2, 4), (2, 5), (2, 6)],
+                    [                (3, 2), (3, 4)                ],
+                    [                (4, 2), (4, 4), (4, 5), (4, 6)]]
+self.__par_pattern = [[(0, 0),         (0, 2), (0, 5), (0, 6), (0, 7)],
+                      [(1, 0),         (1, 2),                 (1, 7)],
+                      [(2, 0), (2, 1), (2, 2), (2, 5), (2, 6), (2, 7)],
+                      [                (3, 2), (3, 5)                ],
+                      [                (4, 2), (4, 5), (4, 6), (4, 7)]]
+```
+
+Each tuple is `(row, col)` relative to the pattern's top-left origin. The odd-width and even-width variants differ slightly in horizontal spacing to remain visually centered.
+
+## Centering logic
+
+The pattern is placed so that "42" appears in the middle of the grid:
+
+```python generator.py
+center_x = self.width // 2
+center_y = self.height // 2
+
+offset_x = center_x - (3 if self.width % 2 else 4)
+offset_y = center_y - 2
+```
+
+- For **odd** widths: `offset_x = center_x - 3`
+- For **even** widths: `offset_x = center_x - 4`
+- Vertical offset is always `center_y - 2`
+
+The final grid coordinates for each pattern cell are calculated as:
+
+```python generator.py
+real_x = px + offset_x
+real_y = py + offset_y
+```
+
+## Marking cells as pre-visited
+
+After computing coordinates, the pattern cells are written into the visited grid before DFS starts:
+
+```python generator.py
+for y in range(self.height):
+    for x in range(self.width):
+        if (x, y) in pattern_coords:
+            self.__visited[y][x] = True
+```
+
+This is the key mechanism: the DFS never considers a visited cell as a carving candidate, so the walls at those coordinates are never removed.
+
+## ENTRY and EXIT constraints
+
+During pattern setup, each pattern coordinate is checked against ENTRY and EXIT:
+
+```python generator.py
+if self.entry == (real_x, real_y):
+    error_list.append(f"ENTRY={self.entry} "
+                         "must be outside of the 42 patter, "
+                         "try other position")
+if self.exit == (real_x, real_y):
+    error_list.append(f"EXIT={self.exit} "
+                         "must be outside of the 42 patter, "
+                         "try other position")
+```
+
+<Warning>
+  If ENTRY or EXIT is placed on a 42-pattern coordinate, a `MazeError` is thrown at startup. Move ENTRY or EXIT to a cell outside the pattern region.
+</Warning>
+
+## Size warning in parsing.py
+
+If the maze dimensions are too small, `check_42_pattern()` (parsing.py:158) prints a warning and prompts the user before continuing:
+
+```python parsing.py
+def check_42_pattern(width: int, height: int) -> None:
+    if width < 9 or height < 7:
+        print("\033[33mWARNING: A maze will be generated "
+              "WITHOUT 'pattern 42'.\n"
+              "Minimum size for print pattern: WIDTH=9, HEIGHT=7\033[0m")
+        option = input("Continue? (y/n): ")
+        if option != "y":
+            sys.exit()
+```
+
+Answering anything other than `y` exits the program.
+
+<Tip>
+  For a well-proportioned 42 pattern with clear surrounding passages, use at least `WIDTH=15` and `HEIGHT=10`. Larger mazes give the pattern more breathing room.
+</Tip>

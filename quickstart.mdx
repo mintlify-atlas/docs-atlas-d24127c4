@@ -1,80 +1,111 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Generate your first maze in minutes."
 ---
 
-## Get started in three steps
+Get A-Maze-ing running and generate your first maze in just a few steps.
 
-Get your documentation site running locally and make your first customization.
+<Steps>
+  <Step title="Clone and install">
+    Clone the repository and install dependencies:
 
-### Step 1: Set up your local environment
+    ```bash
+    git clone https://github.com/carlosgilnieto/a-maze-ing.git
+    cd a-maze-ing
+    make install
+    ```
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    This installs the `mazegen` package and any dependencies. See [Installation](/installation) for full details.
+  </Step>
 
-### Step 2: Deploy your changes
+  <Step title="Create a config file">
+    Create a `config.txt` file (or use the one included in the repo) that defines your maze settings:
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```text config.txt
+    WIDTH=20
+    HEIGHT=15
+    ENTRY=0, 0
+    EXIT=19,14
+    OUTPUT_FILE=maze.txt
+    PERFECT=True
+    #SEED=42 # Optional
+    #ANIMATION=True # Optional but need SPEED_ANIMATION
+    #SPEED_ANIMATION=0.01 # Optional but need ANIMATION
+    ```
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    This creates a 20×15 maze with the entry at the top-left corner `(0,0)` and the exit at the bottom-right `(19,14)`. Output is written to `maze.txt`.
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    | Key | Value | Description |
+    |-----|-------|-------------|
+    | `WIDTH` | `20` | Number of columns |
+    | `HEIGHT` | `15` | Number of rows |
+    | `ENTRY` | `0, 0` | Entry point (x, y) |
+    | `EXIT` | `19, 14` | Exit point (x, y) |
+    | `OUTPUT_FILE` | `maze.txt` | Output filename |
+    | `PERFECT` | `True` | Generate a perfect maze |
+  </Step>
 
-### Step 3: Go live
+  <Step title="Run the program">
+    Launch A-Maze-ing with your config file:
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    <CodeGroup>
+
+    ```bash Python
+    python3 a_maze_ing.py config.txt
+    ```
+
+    ```bash Make
+    make run
+    ```
+
+    </CodeGroup>
+
+    The maze generates instantly and renders in your terminal using ASCII box-drawing characters and ANSI colors.
+  </Step>
+
+  <Step title="Use the interactive menu">
+    After the maze renders, you see the interactive menu:
+
+    ```text
+    === A-Maze-ing ===
+    [1]. Re-generate a new maze
+    [2]. Show path from entry to exit
+    [3]. Change maze colors
+    [4]. Quit
+
+    Choice? (1-4):
+    ```
+
+    | Option | Action |
+    |--------|--------|
+    | `1` | Regenerate a brand-new maze using DFS |
+    | `2` | Toggle the BFS shortest-path overlay on/off |
+    | `3` | Cycle to the next wall color (CYAN → BLUE → PURPLE → YELLOW) |
+    | `4` | Clear the terminal and quit |
+
+    <Tip>
+      Press `2` to reveal the shortest path from your entry point (green) to the exit (red). Press it again to hide it.
+    </Tip>
+  </Step>
+</Steps>
+
+<Tip>
+  If your maze is at least 9 columns wide and 7 rows tall, look for the "42" pattern embedded in the center — it's an easter egg formed by protected wall cells that the DFS algorithm never carves through. See [The 42 pattern](/advanced/pattern-42) for details.
+</Tip>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Configuration options" icon="sliders" href="/configuration/options">
+    Explore all configuration keys including animation, seeds, and non-perfect mazes.
+  </Card>
+  <Card title="How generation works" icon="shuffle" href="/guides/maze-generation">
+    Understand the DFS algorithm that builds your maze.
+  </Card>
+  <Card title="How solving works" icon="route" href="/guides/maze-solving">
+    Learn how BFS finds the shortest path through the maze.
+  </Card>
+  <Card title="API reference" icon="code" href="/api/overview">
+    Use the `mazegen` package directly in your own Python code.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

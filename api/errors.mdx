@@ -1,0 +1,95 @@
+---
+title: "MazeError"
+description: "The custom exception class used throughout mazegen."
+---
+
+## `mazegen.MazeError`
+
+`MazeError` is the single exception type raised by the `mazegen` package. It extends the built-in `Exception` class and carries a category prefix alongside a list of individual error messages.
+
+```python
+class MazeError(Exception):
+    def __init__(self, prefix=None, errors=None):
+        self.prefix = prefix
+        self.errors = errors if errors is not None else []
+        super().__init__(self.prefix)
+    
+    def __str__(self):
+        if not self.errors:
+            return self.prefix
+        formated_msg = [f"{self.prefix}: {msg}."
+                        for msg in self.errors]
+        return "\n".join(formated_msg)
+```
+
+## Parameters
+
+<ParamField path="prefix" type="str or None" default="None">
+  Error category label that identifies where the error originated. Common values used in the codebase:
+  - `"FILE ERROR"` — file not found or permission denied
+  - `"CONFIG ERROR"` — malformed config file content
+  - `"MAZEGEN ERROR"` — invalid constructor parameters
+  - `"MAZEGEN"` — entry/exit conflicts with the 42 pattern
+  - `"KEY ERROR"` — missing mandatory key in config parsing
+</ParamField>
+
+<ParamField path="errors" type="list or None" default="None">
+  List of individual error message strings. Defaults to an empty list when `None` is passed.
+</ParamField>
+
+## `__str__` behavior
+
+| `errors` list | Output |
+|---|---|
+| Empty (`[]`) | Returns `prefix` only |
+| Non-empty | Returns one line per error, each formatted as `"PREFIX: message."`, joined by newlines |
+
+**Example with multiple errors:**
+
+```text
+MAZEGEN ERROR: Recomended minimun size: WIDTH=2.
+MAZEGEN ERROR: The value of ENTRY and EXIT must be different.
+```
+
+## Where `MazeError` is raised
+
+| Location | Prefix | Trigger |
+|---|---|---|
+| `MazeGenerator.maze_from_file()` | `"FILE ERROR"` | `FileNotFoundError` or `PermissionError` opening the config file |
+| `MazeGenerator.maze_from_file()` | `"CONFIG ERROR"` | `ValueError` while parsing the config file |
+| `MazeGenerator._check_values()` | `"MAZEGEN ERROR"` | Invalid constructor parameter values (size, entry/exit bounds, animation config) |
+| `MazeGenerator._set_pattern_42()` | `"MAZEGEN"` | `entry` or `exit` coordinates fall on a cell reserved by the 42 pattern |
+| `check_params()` in parsing | `"KEY ERROR"` | A mandatory config key is missing from the file |
+
+## Catching `MazeError`
+
+```python
+try:
+    maze = mazegen.MazeGenerator.maze_from_file("config.txt")
+except mazegen.MazeError as e:
+    print(f"Error: {e}")
+```
+
+<Tip>
+  Because all errors in `mazegen` are raised as `MazeError`, a single `except mazegen.MazeError` block is sufficient to handle every error the package can produce.
+</Tip>
+
+---
+
+## `print_error` utility
+
+```python
+print_error(msg: str, error_type="Error") -> None
+```
+
+A lightweight helper that prints a red-colored error message to stdout using ANSI escape codes. Not exported from the top-level `mazegen` namespace.
+
+<ParamField path="msg" type="str" required>
+  The error message body to display.
+</ParamField>
+
+<ParamField path="error_type" type="str" default="Error">
+  Label prepended to the message. Defaults to `"Error"`.
+</ParamField>
+
+Output format: `<red>error_type: msg.</red>`

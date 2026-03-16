@@ -1,0 +1,63 @@
+---
+title: "Introduction"
+description: "Learn what A-Maze-ing is and how it works."
+---
+
+## What is A-Maze-ing?
+
+A-Maze-ing is a Python CLI tool that generates and solves mazes directly in your terminal. It uses **Depth-First Search (DFS)** to generate mazes and **Breadth-First Search (BFS)** to find the shortest path from the entry point to the exit.
+
+You configure the maze via a plain-text config file, run the program, and interact with a menu to regenerate, solve, change colors, or quit — all without leaving the terminal.
+
+## Project structure
+
+The project is split into two parts:
+
+- **`a_maze_ing.py`** — The CLI entry point. It reads the config file, drives the main loop, and handles user menu input.
+- **`mazegen/`** — A self-contained Python package that provides maze generation (`MazeGenerator`), BFS solving, terminal rendering, and file output.
+
+```text
+a_maze_ing.py        # CLI entry point
+config.txt           # Configuration file
+mazegen/
+  __init__.py        # Public API (MazeGenerator, Color, render_*, generate_output)
+  generator.py       # DFS generation + BFS solving
+  parsing.py         # Config file parser and schema validation
+  errors.py          # MazeError exception class
+  visual.py          # Terminal rendering and color themes
+  output.py          # File output
+```
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Perfect & non-perfect mazes" icon="gear">
+    Set `PERFECT=True` for a classic maze with exactly one solution. Set it to `False` to add extra passages and multiple routes.
+  </Card>
+  <Card title="BFS path solving" icon="code">
+    Press `[2]` in the menu to reveal or hide the shortest path from entry to exit, calculated with BFS.
+  </Card>
+  <Card title="Animated generation" icon="terminal">
+    Enable `ANIMATION=True` with a `SPEED_ANIMATION` value to watch the DFS carve out the maze cell by cell in real time.
+  </Card>
+  <Card title="Color themes" icon="gear">
+    Cycle through built-in color palettes at runtime with the `[3]` menu option. No restart required.
+  </Card>
+  <Card title="File output" icon="download">
+    Every maze is saved to the file specified by `OUTPUT_FILE` in your config, so you can share or archive generated mazes.
+  </Card>
+  <Card title="The 42 easter egg" icon="code">
+    On mazes that are at least 9 cells wide and 7 cells tall, the number **42** is embedded as a protected pattern in the center of the maze.
+  </Card>
+</CardGroup>
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Python dependencies and the mazegen package.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Generate your first maze in minutes.
+  </Card>
+</CardGroup>

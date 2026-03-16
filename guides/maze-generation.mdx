@@ -1,0 +1,131 @@
+---
+title: "Maze generation"
+description: "How A-Maze-ing generates mazes using depth-first search."
+---
+
+A-Maze-ing uses a **depth-first search (DFS)** algorithm to carve passages through an initially fully-walled grid. Because DFS follows a single path as far as it can before backtracking, every generated maze is a perfect maze by default — exactly one path exists between any two cells.
+
+## Wall bit encoding
+
+Each cell in the grid is stored as a single integer whose lower 4 bits represent the four walls:
+
+| Direction | Bit | Decimal | Binary |
+|-----------|-----|---------|--------|
+| North     | 0   | 1       | `0001` |
+| East      | 1   | 2       | `0010` |
+| South     | 2   | 4       | `0100` |
+| West      | 3   | 8       | `1000` |
+
+A freshly initialised grid sets every cell to `15` (`1111` in binary) — all four walls closed.
+
+Removing a wall uses bitwise AND with the complement of the wall bit:
+
+```python
+# Remove the North wall from the current cell
+self.__grid[cy][cx] &= ~wall      # e.g. 1111 & ~0001 → 1110 (14)
+# Remove the matching South wall from the neighbour
+self.__grid[ny][nx] &= ~opp_wall
+```
+
+The direction table in the source maps each cardinal direction to its displacement, wall bit, and the opposing wall bit that must also be cleared in the neighbour:
+
+```python
+self.__directions = [
+    (0, -1, 1, 4),  # North
+    (1, 0, 2, 8),   # East
+    (0, 1, 4, 1),   # South
+    (-1, 0, 8, 2)   # West
+]
+```
+
+## DFS algorithm walkthrough
+
+<Steps>
+  <Step title="Initialise the grid">
+    `reset_maze()` fills the grid with `15` (all walls closed) and marks all cells as unvisited. The 42 pattern cells, if any, are pre-marked as visited so the DFS skips them.
+
+    ```python
+    self.__grid = [[15 for _ in range(self.width)]
+                   for _ in range(self.height)]
+    self.__visited = [[False for _ in range(self.width)]
+                      for _ in range(self.height)]
+    ```
+  </Step>
+
+  <Step title="Pick a random starting cell">
+    The DFS begins at a random cell that is not in the protected set (42 pattern cells). This is handled by `__get_valid_random_point()`.
+
+    ```python
+    start_x, start_y = self.__get_valid_random_point()
+    self.__visited[start_y][start_x] = True
+    stack = [(start_x, start_y)]
+    ```
+  </Step>
+
+  <Step title="Examine unvisited neighbours">
+    On every iteration the algorithm looks at the cell on top of the stack and collects all four cardinal neighbours that are still within bounds and have not yet been visited.
+
+    ```python
+    cx, cy = stack[-1]
+    unvisited_neighbors = []
+    for dx, dy, wall, opp_wall in self.__directions:
+        nx, ny = cx + dx, cy + dy
+        if (0 <= nx < self.width) and (0 <= ny < self.height):
+            if not self.__visited[ny][nx]:
+                unvisited_neighbors.append((nx, ny, wall, opp_wall))
+    ```
+  </Step>
+
+  <Step title="Advance: knock down a wall">
+    If there are unvisited neighbours, one is chosen at random. The shared wall is removed from both the current cell and the neighbour, the neighbour is marked visited, and it is pushed onto the stack.
+
+    ```python
+    if unvisited_neighbors:
+        nx, ny, wall, opp_wall = random.choice(unvisited_neighbors)
+        self.__grid[cy][cx] &= ~wall
+        self.__grid[ny][nx] &= ~opp_wall
+        self.__visited[ny][nx] = True
+        stack.append((nx, ny))
+    ```
+  </Step>
+
+  <Step title="Backtrack when stuck">
+    If no unvisited neighbours exist, the current cell is a dead end. It is popped from the stack and the algorithm continues from the new top-of-stack cell.
+
+    ```python
+    else:
+        stack.pop()
+    ```
+
+    This repeats until the stack is empty — at which point every reachable cell has been visited and all passages have been carved.
+  </Step>
+</Steps>
+
+## Entry and exit doors
+
+After generation, `open_doors()` is called for both the `ENTRY` and `EXIT` coordinates. It detects which border the cell sits on and removes the corresponding outer wall, creating the entrance and exit openings:
+
+```python
+def open_doors(self, pos: tuple):
+    x, y = pos
+    if (y == 0):
+        self.__grid[y][x] &= ~1   # Remove North wall
+    elif (y == self.height - 1):
+        self.__grid[y][x] &= ~4   # Remove South wall
+    elif (x == 0):
+        self.__grid[y][x] &= ~8   # Remove West wall
+    elif (x == self.width - 1):
+        self.__grid[y][x] &= ~2   # Remove East wall
+```
+
+## Non-perfect mode
+
+When `PERFECT=False`, the generator runs the full DFS first and then randomly removes an additional `(width × height) / 75` interior walls, creating extra loops and multiple valid paths through the maze.
+
+<Tip>
+  Starting the DFS from a random cell (instead of always `(0, 0)`) means the branching structure of the maze is different every run, even at the same size. Set `SEED` in your config to get a reproducible maze.
+</Tip>
+
+<Note>
+  When the maze is large enough (at least 9 columns × 7 rows), certain cells near the centre are pre-marked as visited and protected from the DFS. These form the "42" pattern. See [Pattern 42](/advanced/pattern-42) for details.
+</Note>

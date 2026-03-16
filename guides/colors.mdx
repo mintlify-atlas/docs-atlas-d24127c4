@@ -1,0 +1,72 @@
+---
+title: "Color themes"
+description: "Cycle through color themes for your maze walls."
+---
+
+A-Maze-ing uses ANSI escape codes to colorise maze walls and special cells in the terminal. All colors are defined in the `Color` enum in `visual.py`.
+
+<Note>
+  Colors rely on ANSI escape code support. Most modern terminal emulators (iTerm2, GNOME Terminal, Windows Terminal, etc.) support them out of the box. If your terminal shows raw escape sequences, try a different emulator.
+</Note>
+
+## Color enum
+
+```python
+class Color(Enum):
+    BLACK  = "\033[30m"
+    GREEN  = "\033[32m"
+    CYAN   = "\033[36m"
+    BLUE   = "\033[34m"
+    PURPLE = "\033[35m"
+    YELLOW = "\033[33m"
+    RED    = "\033[31m"
+    RESET  = "\033[0m"
+```
+
+## Wall color palette
+
+`Color.get_pallete()` returns the subset of colors that are available for cycling as wall colors. It excludes `RESET`, `BLACK`, `GREEN`, and `RED`:
+
+```python
+@staticmethod
+def get_pallete() -> list:
+    invalid_colors = [Color.RESET, Color.BLACK,
+                      Color.GREEN, Color.RED]
+    return [c
+            for c in Color
+            if c not in invalid_colors]
+```
+
+This leaves the following four colors in the active palette:
+
+| Color  | ANSI code    |
+|--------|--------------|
+| CYAN   | `\033[36m`   |
+| BLUE   | `\033[34m`   |
+| PURPLE | `\033[35m`   |
+| YELLOW | `\033[33m`   |
+
+## Cycling colors
+
+Press **[3]** in the interactive menu to advance to the next wall color. The index wraps around so cycling through all four colors returns to CYAN:
+
+```python
+elif option == "3":
+    color_idx = (color_idx + 1) % len(pallet)
+```
+
+The maze is re-rendered immediately with the new color — no regeneration required.
+
+## Reserved colors
+
+The following colors are not available for wall cycling because they carry fixed semantic meaning:
+
+| Color  | Purpose |
+|--------|---------|
+| BLACK  | Default wall color (before first cycle) |
+| GREEN  | Always marks the entry point |
+| RED    | Always marks the exit point |
+| YELLOW | Current DFS / BFS frontier cell during animation |
+| CYAN   | BFS explored cells during animation |
+
+Note that CYAN and YELLOW appear in both the reserved list and the cycling palette. When animation is running they are used for their reserved roles. Once animation finishes, cycling to those colors applies them to the static wall rendering instead.

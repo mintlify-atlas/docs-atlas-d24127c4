@@ -1,97 +1,78 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "A-Maze-ing"
+description: "A terminal-based maze generator and solver — powered by DFS generation, BFS pathfinding, and animated rendering right in your terminal."
 ---
 
-## Setting up
-
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Generate your first maze in under two minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Installation" icon="download" href="/installation">
+    Install dependencies and get the project running.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Configuration" icon="sliders" href="/configuration/config-file">
+    Learn how to configure maze dimensions, entry/exit points, and more.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Explore the full `mazegen` Python package API.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What is A-Maze-ing?
 
-Everything you need to create world-class documentation.
+**A-Maze-ing** is a Python CLI tool that generates and solves mazes interactively in your terminal. It uses a depth-first search (DFS) algorithm to carve perfect mazes and a breadth-first search (BFS) algorithm to find the shortest path between any entry and exit point.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+Run it, watch your maze come to life, toggle the solution path, change colors, and regenerate — all from a simple interactive menu.
 
-## Need inspiration?
+```
+=== A-Maze-ing ===
+[1]. Re-generate a new maze
+[2]. Show path from entry to exit
+[3]. Change maze colors
+[4]. Quit
+```
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="DFS Maze Generation" icon="shuffle">
+    Generates perfect mazes using randomized depth-first search with backtracking — every cell is reachable from every other cell.
+  </Card>
+  <Card title="BFS Pathfinding" icon="route">
+    Finds the shortest path from entry to exit using breadth-first search, displayed as a highlighted trail through the maze.
+  </Card>
+  <Card title="Animated Rendering" icon="play">
+    Watch the maze being carved and the solver exploring paths in real time, with configurable animation speed.
+  </Card>
+  <Card title="Color Themes" icon="palette">
+    Cycle through CYAN, BLUE, PURPLE, and YELLOW wall color themes without regenerating the maze.
+  </Card>
+  <Card title="Non-Perfect Mode" icon="arrows-split-up-and-left">
+    Optional imperfect maze mode that removes extra walls to create multiple valid paths through the maze.
+  </Card>
+  <Card title="The 42 Pattern" icon="star">
+    Mazes large enough (9×7 or bigger) embed a hidden "42" pattern in the center as a protected island of walls.
+  </Card>
+  <Card title="File Output" icon="file-export">
+    Exports the maze grid, entry/exit coordinates, and the solution path to a `.txt` file in hexadecimal format.
+  </Card>
+  <Card title="Reproducible Seeds" icon="seedling">
+    Optionally seed the random number generator to reproduce the exact same maze layout every time.
+  </Card>
+</CardGroup>
+
+## How it works
+
+A-Maze-ing is built around the `mazegen` Python package, which provides the maze generation, solving, and rendering engine. The CLI entry point `a_maze_ing.py` reads a configuration file, builds the maze, and drops you into an interactive session.
+
+<Steps>
+  <Step title="Write a config file">
+    Define your maze dimensions, entry/exit coordinates, and optional settings in a `config.txt` file.
+  </Step>
+  <Step title="Run the program">
+    Execute `python3 a_maze_ing.py config.txt` — the maze generates and renders immediately.
+  </Step>
+  <Step title="Interact">
+    Use the numbered menu to regenerate, show/hide the solution, cycle colors, or quit.
+  </Step>
+</Steps>

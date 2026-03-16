@@ -1,0 +1,65 @@
+---
+title: "Config file"
+description: "Configure A-Maze-ing using a KEY=VALUE text file."
+---
+
+A-Maze-ing is configured through a plain text file where each line follows the `KEY=VALUE` format. Pass the config file as a command-line argument when running the program:
+
+```bash
+python3 a_maze_ing.py myconfig.txt
+```
+
+## File format
+
+Each non-empty line must be a `KEY=VALUE` pair. Lines starting with `#` are comments and are ignored. Comments can also appear inline, after a value.
+
+```text config.txt
+WIDTH=20
+HEIGHT=15
+ENTRY=0, 0
+EXIT=19,14
+OUTPUT_FILE=maze.txt
+PERFECT=True
+#SEED=42 # Optional
+#ANIMATION=True # Optional but need SPEED_ANIMATION
+#SPEED_ANIMATION=0.01 # Optional but need ANIMATION
+```
+
+## Parsing rules
+
+- **Keys are case-insensitive.** Internally, all keys are lowercased before use.
+- **No spaces allowed in values.** A value like `0, 0` is valid for tuples (the space is stripped before the `=`), but a value like `maze file.txt` is not.
+- **Duplicate keys are rejected.** Each key may appear at most once.
+- **Unknown keys are rejected.** Only the keys listed below are accepted.
+- **Comments start with `#`** and can appear on the same line as a value — everything after `#` is ignored.
+- **Lines must follow `KEY=VALUE` format exactly.** Any line that cannot be split into exactly two parts on `=` is an error.
+
+## Mandatory keys
+
+All six of the following keys must be present in every config file:
+
+| Key | Type | Description |
+|---|---|---|
+| `WIDTH` | int | Number of columns in the maze grid |
+| `HEIGHT` | int | Number of rows in the maze grid |
+| `ENTRY` | int, int | Entry point coordinates (`x,y`) |
+| `EXIT` | int, int | Exit point coordinates (`x,y`) |
+| `OUTPUT_FILE` | file (.txt) | Filename to write the maze output to |
+| `PERFECT` | bool | Whether to generate a perfect maze |
+
+## Optional keys
+
+| Key | Type | Description |
+|---|---|---|
+| `SEED` | int | Random seed for reproducible maze generation |
+| `ANIMATION` | bool | Animate the maze generation and solving process |
+| `SPEED_ANIMATION` | float | Delay in seconds between animation frames |
+
+<Note>
+  `ANIMATION` and `SPEED_ANIMATION` are coupled: if `ANIMATION=True`, then
+  `SPEED_ANIMATION` must also be set to a value of at least `0.01`. Conversely,
+  if `SPEED_ANIMATION` is greater than `0`, then `ANIMATION=True` must also be
+  set. Setting one without the other causes a validation error.
+</Note>
+
+For a full description of every option including allowed values and constraints, see the [Configuration options](/configuration/options) reference.

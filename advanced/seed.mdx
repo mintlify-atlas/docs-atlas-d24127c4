@@ -1,0 +1,64 @@
+---
+title: "Reproducible seeds"
+description: "Use a seed to generate the exact same maze every time."
+---
+
+The `SEED` option sets the value passed to Python's `random.seed()` before generation begins. With a fixed seed, the same configuration always produces the same maze.
+
+## How seeding works
+
+The seed is applied in `reset_maze()` (generator.py:165) before the grid is initialized:
+
+```python generator.py
+if self.seed:
+    random.seed(self.seed)
+else:
+    random.seed()
+```
+
+- **With SEED set**: `random.seed(self.seed)` — the random number sequence is deterministic, so every run with the same config produces an identical maze.
+- **Without SEED**: `random.seed()` is called with no argument, using system entropy — a different maze is generated each run.
+
+<Note>
+  `SEED=0` is treated as "no seed" because `0` is falsy in Python. Use `SEED=1` or higher for a seeded run.
+</Note>
+
+## Configuration
+
+Add `SEED` to your config file:
+
+```text config.txt
+WIDTH=20
+HEIGHT=15
+ENTRY=0,0
+EXIT=19,14
+OUTPUT_FILE=maze.txt
+PERFECT=True
+SEED=42
+```
+
+Omit the line entirely (or comment it out) to use a random seed each run:
+
+```text config.txt
+WIDTH=20
+HEIGHT=15
+ENTRY=0,0
+EXIT=19,14
+OUTPUT_FILE=maze.txt
+PERFECT=True
+#SEED=42 # Optional
+```
+
+## Use cases
+
+- **Sharing mazes**: send your config file (including SEED) to reproduce the exact maze layout on another machine.
+- **Testing and debugging**: a fixed seed ensures the maze layout stays consistent across test runs.
+- **Puzzle design**: generate a maze with a known solution path, then share it by seed.
+
+<Tip>
+  The seed `42` is a natural starting point — it also aligns with the 42-pattern easter egg, so the "42" wall shape appears in a consistent position every time you run with that seed.
+</Tip>
+
+<Warning>
+  SEED must be an integer. Non-integer values (e.g., `SEED=hello` or `SEED=3.14`) cause a config parse error at startup.
+</Warning>

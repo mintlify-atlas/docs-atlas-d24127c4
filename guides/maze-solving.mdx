@@ -1,0 +1,111 @@
+---
+title: "Maze solving"
+description: "How A-Maze-ing finds the shortest path using breadth-first search."
+---
+
+Once a maze has been generated, A-Maze-ing automatically computes the shortest solution using **breadth-first search (BFS)**. Because BFS explores cells in order of their distance from the start, the first time it reaches the exit is guaranteed to be via the shortest possible path.
+
+## Algorithm walkthrough
+
+<Steps>
+  <Step title="Initialise the queue">
+    BFS begins at `ENTRY`. The queue holds cells waiting to be explored, and `came_from` acts as both a visited set and a back-pointer map for path reconstruction.
+
+    ```python
+    queue_pos = [self.entry]
+    came_from = {self.entry: None}
+    ```
+  </Step>
+
+  <Step title="Dequeue the next cell">
+    The cell at the front of the queue is dequeued. If it is the `EXIT`, the search stops immediately.
+
+    ```python
+    cx, cy = queue_pos.pop(0)
+    if (cx, cy) == self.exit:
+        break
+    ```
+  </Step>
+
+  <Step title="Check all four neighbours for open walls">
+    For each cardinal direction, BFS checks whether the wall between the current cell and the neighbour is absent. A wall bit of `0` means the passage is open.
+
+    ```python
+    for dx, dy, wall, _ in self.__directions:
+        nx, ny = cx + dx, cy + dy
+        if (0 <= nx < self.width) and (0 <= ny < self.height):
+            if (not (self.__grid[cy][cx] & wall)
+                    and (nx, ny) not in came_from):
+                came_from[(nx, ny)] = (cx, cy)
+                queue_pos.append((nx, ny))
+    ```
+
+    The expression `not (self.__grid[cy][cx] & wall)` evaluates to `True` when the wall bit is `0` — meaning the passage is open in that direction.
+  </Step>
+
+  <Step title="Record where each cell was reached from">
+    Every newly reachable cell is added to `came_from` with the current cell as its predecessor. This prevents revisiting and allows the path to be reconstructed later.
+
+    ```python
+    came_from[(nx, ny)] = (cx, cy)
+    queue_pos.append((nx, ny))
+    ```
+  </Step>
+
+  <Step title="Reconstruct the path">
+    Once `EXIT` is reached, the algorithm walks `came_from` backwards from the exit to the entry and then reverses the result to get the path in forward order.
+
+    ```python
+    path = []
+    current = self.exit
+    while current is not None:
+        path.append(current)
+        current = came_from[current]
+    self.__path = path[::-1]
+    ```
+  </Step>
+</Steps>
+
+## Checking whether a wall is open
+
+The key condition in the BFS is a single bitwise test:
+
+```python
+not (self.__grid[cy][cx] & wall)
+```
+
+If the result of AND-ing the cell value with the wall bit is `0`, the bit is not set and the wall is absent — the passage is open. For example, a cell with value `6` (`0110` binary) has its East (`0010`) and South (`0100`) walls present but no North or West wall.
+
+## Path direction encoding
+
+After solving, `dir_to_path()` in `output.py` converts the list of coordinate pairs into a compact string of direction characters. It compares each consecutive pair of cells and looks up the movement delta in a dictionary:
+
+```python
+moves = {(0, -1): "N",
+         (1,  0): "E",
+         (0,  1): "S",
+         (-1, 0): "W"}
+
+for (cx, cy), (nx, ny) in zip(path, path[1:]):
+    direction = (nx - cx, ny - cy)
+    route.append(moves.get(direction, "X"))
+```
+
+The resulting string (e.g. `EESSSEEENNNN...`) is written to the output file and can be replayed step by step.
+
+## Viewing the path in the UI
+
+Press **[2]** in the interactive menu to toggle the solution overlay. When enabled, every cell that is part of the shortest path is highlighted directly on the rendered maze.
+
+```text
+[1]. Re-generate a new maze
+[2]. Show path from entry to exit
+[3]. Change maze colors
+[4]. Quit
+```
+
+Selecting [2] again hides the path.
+
+<Note>
+  The path is recalculated from scratch after every regeneration (option [1]). Toggling the path display (option [2]) on an existing maze reuses the already-computed path without re-running BFS.
+</Note>

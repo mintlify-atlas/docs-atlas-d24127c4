@@ -1,0 +1,109 @@
+---
+title: "Non-perfect mazes"
+description: "Create mazes with multiple paths by disabling perfect mode."
+---
+
+A-Maze-ing supports two maze types controlled by the `PERFECT` setting in `config.txt`.
+
+## Perfect vs non-perfect mazes
+
+- A **perfect** maze has exactly one path between any two cells. The grid forms a spanning tree — no loops, no isolated regions.
+- A **non-perfect** maze has extra passages: multiple valid routes exist between any two points. The grid has cycles.
+
+## Configuration
+
+Set `PERFECT=False` in your config file to enable non-perfect mode:
+
+```text config.txt
+WIDTH=20
+HEIGHT=15
+ENTRY=0,0
+EXIT=19,14
+OUTPUT_FILE=maze.txt
+PERFECT=False
+```
+
+## How non_perfect_algo() works
+
+The algorithm runs in two stages (generator.py:259):
+
+<Steps>
+  <Step title="Run the full perfect DFS">
+    The non-perfect algorithm starts by delegating to `perfect_algo()` using `yield from`, producing a complete spanning-tree maze:
+
+    ```python generator.py
+    yield from self.perfect_algo()
+    ```
+  </Step>
+
+  <Step title="Calculate how many extra walls to remove">
+    The target number of additional walls to remove is:
+
+    ```python generator.py
+    amount_walls: int = (self.width * self.height) // 75
+    ```
+
+    For a 20×15 maze: `(20 * 15) // 75 = 4` extra walls. The effect is subtle by default.
+  </Step>
+
+  <Step title="Randomly remove additional walls">
+    Up to 2000 attempts are made to find and remove valid walls:
+
+    ```python generator.py
+    attempts = 0
+    while amount_walls > 0 and attempts < 2000:
+        attempts += 1
+        cx = random.randint(1, self.width - 2)
+        cy = random.randint(1, self.height - 2)
+
+        direction = random.choice(self.__directions)
+        dx, dy, wall, opp_wall = direction
+        nx, ny = cx + dx, cy + dy
+
+        # Check la celda estan dentro del laberinto?
+        if not (0 <= nx < self.width and 0 <= ny < self.height):
+            continue
+        # Check la celda y la vecian son protegidas? (42 patron)
+        if (cx, cy) in self.__protected or (nx, ny) in self.__protected:
+            continue
+        #Check la celda ya esta abierta?
+        if not (self.__grid[cy][cx] & wall):
+            continue
+        #Check si la celda o la vecina ya tienen abiertas 2 paredes
+        if self.__count_walls(cx, cy) <= 1 or self.__count_walls(nx, ny) <= 1:
+            continue
+
+        self.__grid[cy][cx] &= ~wall      # Quita pared en actual
+        self.__grid[ny][nx] &= ~opp_wall  # Quita pared en vecina
+        amount_walls -= 1
+    ```
+
+    The 2000-attempt cap prevents an infinite loop when remaining valid walls are scarce.
+  </Step>
+</Steps>
+
+## Wall removal guards
+
+Each candidate wall removal passes four checks before proceeding:
+
+| Check | Purpose |
+|---|---|
+| Bounds check | Target cell must be within grid boundaries |
+| Protected cells | Skips any cell in `__protected` (42-pattern cells) |
+| Already open | Skips walls that have already been removed |
+| Minimum walls | Skips cells with 2 or fewer walls remaining (`__count_walls <= 1`) |
+
+The `__count_walls(x, y)` method counts the number of `1`-bits in a cell's bitmask — each bit represents one remaining wall:
+
+```python generator.py
+def __count_walls(self, x: int, y: int) -> int:
+    """Cuenta cuantos 1 hay en la celda"""
+    cell = self.__grid[y][x]
+    return bin(cell).count('1')
+```
+
+The minimum-walls guard ensures cells retain at least some structure, preventing the maze from degenerating into an open field.
+
+<Tip>
+  Non-perfect mode creates more interesting puzzles since there are multiple valid solutions. The BFS solver still finds the optimal (shortest) route regardless of how many alternate paths exist.
+</Tip>

@@ -1,0 +1,74 @@
+---
+title: "Installation"
+description: "Install A-Maze-ing and its dependencies."
+---
+
+<Note>
+  A-Maze-ing requires **Python 3.10 or later**. Make sure your Python version meets this requirement before proceeding.
+</Note>
+
+## Prerequisites
+
+- Python 3.10+
+- `pip`
+- `git`
+
+## Steps
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/your-org/a-maze-ing.git
+    cd a-maze-ing
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    The `requirements.txt` file includes development tools (`flake8`, `mypy`) as well as the bundled `mazegen` wheel. Install everything with either command:
+
+    <CodeGroup>
+      ```bash make
+      make install
+      ```
+
+      ```bash pip
+      pip install -r requirements.txt
+      ```
+    </CodeGroup>
+
+    `requirements.txt` contents:
+
+    ```text
+    mazegen-1.0.0-py3-none-any.whl
+    flake8==7.3.0
+    librt==0.8.1
+    mypy==1.19.1
+    mypy_extensions==1.1.0
+    pathspec==1.0.4
+    tomli==2.4.0
+    typing_extensions==4.15.0
+    ```
+
+    <Note>
+      The `mazegen` package itself has no third-party runtime dependencies — everything it needs is part of the Python standard library.
+    </Note>
+  </Step>
+
+  <Step title="Install the mazegen package">
+    If the wheel was not picked up automatically by the previous step, install it directly:
+
+    ```bash
+    pip install mazegen-1.0.0-py3-none-any.whl
+    ```
+  </Step>
+
+  <Step title="Verify the installation">
+    Run the program with the bundled config file. If the maze renders in your terminal, everything is working correctly.
+
+    ```bash
+    python3 a_maze_ing.py config.txt
+    ```
+
+    You should see a maze drawn in the terminal followed by the interactive menu.
+  </Step>
+</Steps>

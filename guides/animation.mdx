@@ -1,0 +1,82 @@
+---
+title: "Animation"
+description: "Animate maze generation and solving in your terminal."
+---
+
+A-Maze-ing can animate both the DFS generation and the BFS solve step by step directly in your terminal. Each frame is printed by clearing the screen and re-rendering the maze with the current state highlighted.
+
+## Enabling animation
+
+Add two keys to your `config.txt`:
+
+```text config.txt
+ANIMATION=True
+SPEED_ANIMATION=0.05
+```
+
+`SPEED_ANIMATION` is the delay in seconds between frames. Lower values produce faster animations.
+
+<Tip>
+  Recommended speed values:
+  - `0.01` — fast (barely visible per-step)
+  - `0.05` — medium (good for following the algorithm)
+  - `0.1` — slow (easy to study each decision)
+</Tip>
+
+<Warning>
+  `ANIMATION=True` requires `SPEED_ANIMATION >= 0.01`. If the value is lower, a `MazeError` is raised on startup before any maze is drawn. `SPEED_ANIMATION` without `ANIMATION=True` also raises an error.
+</Warning>
+
+## Generation animation
+
+When animation is active, `render_generation()` in `visual.py` drives the DFS as a generator, printing a new frame after every wall removal or backtrack step:
+
+```python
+for _, current_stack in generator:
+    if maze.speed_animation > 0:
+        output = render_maze(maze, color=wall_color, stack=current_stack)
+        print(output)
+        time.sleep(maze.speed_animation)
+```
+
+During generation the current cell at the **top of the DFS stack** is highlighted in **yellow**, and all other cells currently on the stack (the backtrack trail) are highlighted in **purple**. Walls are carved in real time as the DFS advances.
+
+| Cell state              | Color  |
+|-------------------------|--------|
+| Current frontier cell   | Yellow |
+| DFS backtrack stack     | Purple |
+
+## Solve animation
+
+Immediately after generation, `render_solve()` runs the BFS solver as a generator and animates each step:
+
+```python
+for anim_path in generator:
+    output = render_maze(maze, color=color, path=anim_path)
+    print(output)
+    time.sleep(maze.speed_animation)
+```
+
+The BFS frontier cell (the cell currently being expanded) is shown in **yellow**, and all cells that BFS has already explored and recorded in `came_from` are shown in **cyan**.
+
+| Cell state           | Color |
+|----------------------|-------|
+| BFS frontier cell    | Yellow |
+| BFS explored cells   | Cyan  |
+
+## Without animation
+
+If `ANIMATION` is not set (or set to `False`), `maze.generate()` and `maze.calculate_path()` exhaust the generator functions internally without printing intermediate frames. The completed maze appears instantly.
+
+```python
+if maze.animation:
+    mazegen.render_generation(maze)
+    mazegen.render_solve(maze)
+else:
+    maze.generate()
+    maze.calculate_path()
+```
+
+## Path animation
+
+Toggling the path display with option **[2]** also uses `speed_animation` when revealing the path for the first time after a generation cycle. The path is drawn cell by cell via `render_path()`, respecting the same delay per frame.

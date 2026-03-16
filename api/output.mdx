@@ -1,0 +1,134 @@
+---
+title: "Output functions"
+description: "Functions for converting and writing maze data to files."
+---
+
+Module: `mazegen.output` (exported via `mazegen`)
+
+Provides utilities for serializing a `MazeGenerator` instance to a text file. The main entry point is `generate_output`; the helper functions `int_to_hex`, `hex_to_str`, and `dir_to_path` are also importable for custom use.
+
+---
+
+## `generate_output`
+
+```python
+generate_output(maze: MazeGenerator) -> None
+```
+
+The main output function. Converts the maze grid to hex, formats the entry/exit coordinates and solution path, then writes everything to `maze.output_file`.
+
+<ParamField path="maze" type="MazeGenerator" required>
+  The maze instance to serialize. Reads `maze.get_grid()`, `maze.entry`, `maze.exit`, `maze.get_path()`, and `maze.output_file`.
+</ParamField>
+
+**Output file format:**
+
+```text
+<hex_row_0>
+<hex_row_1>
+...
+<hex_row_n>
+
+<entry_x>,<entry_y>
+<exit_x>,<exit_y>
+<path_directions>
+```
+
+For example, a 3×2 maze with entry `(0,0)`, exit `(2,1)`, and path `ESEN` would produce:
+
+```text
+F6D
+B9B
+
+0,0
+2,1
+ESEN
+```
+
+---
+
+## `int_to_hex`
+
+```python
+int_to_hex(maze: List[List[int]]) -> List[List[str]]
+```
+
+Converts each cell integer (0–15) in the grid to its uppercase hex character (`'0'`–`'F'`). Returns a list of strings, one per row.
+
+```python
+def int_to_hex(maze: List[List[int]]) -> List[List[str]]:
+    grid: List[List] = []
+    for line in maze:
+        row = ""
+        for cell in line:
+            row += str(hex(cell)[2:]).upper()
+        grid.append(row)
+    return grid
+```
+
+| Input (int) | Output (hex char) |
+|---|---|
+| `0` | `'0'` |
+| `6` | `'6'` |
+| `15` | `'F'` |
+
+---
+
+## `hex_to_str`
+
+```python
+hex_to_str(maze: List[List[int]]) -> str
+```
+
+Converts a hex grid (the output of `int_to_hex`) to a single newline-terminated multiline string. Each row is a concatenation of hex characters with no spaces between cells.
+
+**Example** — a 3-column row `["F", "6", "D"]` becomes `"F6D\n"`.
+
+<ResponseField name="return" type="str">
+  The full maze grid as a multiline string, with each row on its own line.
+</ResponseField>
+
+---
+
+## `dir_to_path`
+
+```python
+dir_to_path(path: List[tuple]) -> str
+```
+
+Converts a list of `(x, y)` coordinate tuples (as returned by `maze.get_path()`) to a string of cardinal direction letters.
+
+Direction mapping (delta between consecutive cells):
+
+| Delta `(dx, dy)` | Direction |
+|---|---|
+| `(0, -1)` | `'N'` |
+| `(1, 0)` | `'E'` |
+| `(0, 1)` | `'S'` |
+| `(-1, 0)` | `'W'` |
+
+Returns an empty string if `path` is empty or contains fewer than 2 cells.
+
+```python
+def dir_to_path(path: List[tuple]) -> str:
+    route: List = []
+    moves = {(0, -1): "N",
+             (1, 0): "E",
+             (0, 1): "S",
+             (-1, 0): "W"}
+    if not path or len(path) < 2:
+        return ""
+    
+    for (cx, cy), (nx, ny) in zip(path, path[1:]):
+        direction = (nx - cx, ny - cy)
+        route.append(moves.get(direction, "X"))
+    return "".join(route)
+```
+
+<ResponseField name="return" type="str">
+  A string of `N`, `E`, `S`, `W` characters. Returns `""` for paths with fewer than 2 cells.
+</ResponseField>
+
+<Note>
+  If an unrecognized delta is encountered (which should not occur in a valid maze), the direction is recorded as `'X'`.
+</Note>

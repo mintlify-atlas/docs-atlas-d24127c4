@@ -1,0 +1,185 @@
+---
+title: "Visual rendering"
+description: "Functions and classes for rendering mazes in the terminal."
+---
+
+Module: `mazegen.visual` (exported via `mazegen`)
+
+Provides ANSI-colored terminal rendering for mazes, including static display, generation animation, and solve animation.
+
+---
+
+## `Color` enum
+
+```python
+class Color(Enum):
+    BLACK  = "\033[30m"
+    GREEN  = "\033[32m"
+    CYAN   = "\033[36m"
+    BLUE   = "\033[34m"
+    PURPLE = "\033[35m"
+    YELLOW = "\033[33m"
+    RED    = "\033[31m"
+    RESET  = "\033[0m"
+```
+
+Some colors carry fixed semantic meaning and are reserved for internal use:
+
+| Color | Reserved for |
+|---|---|
+| `GREEN` | Entry cell |
+| `RED` | Exit cell |
+| `YELLOW` | Active DFS/BFS frontier cell |
+| `CYAN` | BFS explored cells |
+
+### `Color.get_pallete`
+
+```python
+@staticmethod
+Color.get_pallete() -> list
+```
+
+Returns the list of `Color` members that are safe to use for wall coloring. Excludes `RESET`, `BLACK`, `GREEN`, and `RED`.
+
+```python
+# Returns: [Color.CYAN, Color.BLUE, Color.PURPLE, Color.YELLOW]
+mazegen.Color.get_pallete()
+```
+
+<Tip>
+  `a_maze_ing.py` uses `get_pallete()` to let the user cycle through wall colors interactively without accidentally overriding entry/exit markers.
+</Tip>
+
+---
+
+## `Draw` enum (internal)
+
+Defines the ASCII box-drawing characters used to construct maze walls:
+
+| Member | Value | Purpose |
+|---|---|---|
+| `WALL_H` | `"---"` | Horizontal wall segment (North/South) |
+| `EMPTY_H` | `"   "` | Open horizontal segment |
+| `WALL_V` | `"|"` | Vertical wall segment (East/West) |
+| `EMPTY_V` | `" "` | Open vertical segment |
+| `CROSS` | `"+"` | Corner/junction point |
+| `BLOCK` | `" ■ "` | Filled cell content |
+
+This enum is not exported from the top-level `mazegen` namespace and is intended for internal use only.
+
+---
+
+## Rendering functions
+
+### `render_maze`
+
+```python
+render_maze(
+    maze,
+    show_path=False,
+    color=Color.BLACK,
+    terminal=False,
+    stack=None,
+    path=None
+) -> str
+```
+
+Builds and returns the full maze as a string of ANSI-colored characters. Each cell is drawn as a two-line block (north wall row + center row). Clears the terminal before rendering.
+
+<ParamField path="maze" type="MazeGenerator" required>
+  The maze instance to render.
+</ParamField>
+
+<ParamField path="show_path" type="bool" default="False">
+  When `True`, highlights the solution path cells stored in `maze.get_path()`.
+</ParamField>
+
+<ParamField path="color" type="Color" default="Color.BLACK">
+  ANSI color applied to wall characters.
+</ParamField>
+
+<ParamField path="terminal" type="bool" default="False">
+  If `True`, also prints the rendered string to stdout in addition to returning it.
+</ParamField>
+
+<ParamField path="stack" type="list or None" default="None">
+  DFS stack for generation animation. The top of the stack (`stack[-1]`) is rendered in `YELLOW`; all other stack cells in `PURPLE`.
+</ParamField>
+
+<ParamField path="path" type="tuple or None" default="None">
+  A `(came_from, current_cell)` tuple for BFS solve animation. `current_cell` is rendered in `YELLOW`; all cells in `came_from` are rendered in `CYAN`.
+</ParamField>
+
+<ResponseField name="return" type="str">
+  The complete maze as a single ANSI-formatted string.
+</ResponseField>
+
+---
+
+### `render_generation`
+
+```python
+render_generation(maze: MazeGenerator, wall_color=Color.BLACK) -> None
+```
+
+Runs the generation algorithm while rendering each frame to the terminal. Temporarily disables terminal echo and canonical mode (so keystrokes during animation are suppressed), then restores them on completion or error.
+
+<ParamField path="maze" type="MazeGenerator" required>
+  The maze to generate and render.
+</ParamField>
+
+<ParamField path="wall_color" type="Color" default="Color.BLACK">
+  Wall color used for all rendered frames.
+</ParamField>
+
+<Note>
+  If `maze.speed_animation` is `0`, the generator runs without printing intermediate frames — only the final state is rendered. This is equivalent to non-animated generation.
+</Note>
+
+---
+
+### `render_solve`
+
+```python
+render_solve(maze: MazeGenerator, color=Color.BLACK) -> None
+```
+
+Runs the BFS solve algorithm while rendering each exploration frame to the terminal. Each frame shows the current BFS frontier and visited cells.
+
+<ParamField path="maze" type="MazeGenerator" required>
+  The maze to solve and render.
+</ParamField>
+
+<ParamField path="color" type="Color" default="Color.BLACK">
+  Wall color used for all rendered frames.
+</ParamField>
+
+<Warning>
+  `render_solve` uses `maze.speed_animation` for frame timing. Ensure `maze.animation=True` and `maze.speed_animation >= 0.01` before calling this function, or the animation will have no delay between frames.
+</Warning>
+
+---
+
+### `render_path`
+
+```python
+render_path(
+    maze: MazeGenerator,
+    animated_path=False,
+    wall_color=Color.BLACK
+) -> None
+```
+
+Renders the final solution path. Always prints the completed path at the end. If `animated_path=True`, also animates the path drawing step-by-step before the final render.
+
+<ParamField path="maze" type="MazeGenerator" required>
+  The maze whose stored path should be rendered.
+</ParamField>
+
+<ParamField path="animated_path" type="bool" default="False">
+  If `True`, progressively reveals the path one cell at a time using `maze.speed_animation` as the frame delay.
+</ParamField>
+
+<ParamField path="wall_color" type="Color" default="Color.BLACK">
+  Wall color for all rendered frames.
+</ParamField>

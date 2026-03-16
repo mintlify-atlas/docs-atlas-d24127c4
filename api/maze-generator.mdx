@@ -1,0 +1,248 @@
+---
+title: "MazeGenerator"
+description: "The core class for generating and solving mazes."
+---
+
+## `mazegen.MazeGenerator`
+
+The central class of the `mazegen` package. It owns the maze grid, runs DFS-based generation, and runs BFS-based pathfinding. Instances are typically created either directly or via the `maze_from_file` class method.
+
+## Constructor
+
+```python
+MazeGenerator(
+    width: int,
+    height: int,
+    entry: tuple,
+    exit: tuple,
+    seed=0,
+    perfect=True,
+    output_file="maze.txt",
+    animation=False,
+    speed_animation=0
+)
+```
+
+<ParamField path="width" type="int" required>
+  Number of columns in the maze grid. Must be ≥ 1.
+</ParamField>
+
+<ParamField path="height" type="int" required>
+  Number of rows in the maze grid. Must be ≥ 1.
+</ParamField>
+
+<ParamField path="entry" type="tuple" required>
+  Entry point as an `(x, y)` tuple. Must be within grid bounds (`0 ≤ x < width`, `0 ≤ y < height`) and must differ from `exit`.
+</ParamField>
+
+<ParamField path="exit" type="tuple" required>
+  Exit point as an `(x, y)` tuple. Must be within grid bounds and must differ from `entry`.
+</ParamField>
+
+<ParamField path="seed" type="int" default="0">
+  Random seed for reproducible maze generation. `0` means no seed is applied — the RNG uses system entropy, producing a different maze each run.
+</ParamField>
+
+<ParamField path="perfect" type="bool" default="True">
+  If `True`, generates a perfect maze (a spanning tree — exactly one path between any two cells, no loops). If `False`, extra passages are carved after DFS to create alternate routes.
+</ParamField>
+
+<ParamField path="output_file" type="str" default="maze.txt">
+  File path for the output `.txt` file written by `generate_output()`.
+</ParamField>
+
+<ParamField path="animation" type="bool" default="False">
+  Enables frame-by-frame animation during generation and solving. When `True`, `speed_animation` must be ≥ 0.01.
+</ParamField>
+
+<ParamField path="speed_animation" type="float" default="0">
+  Seconds to wait between animation frames. Must be ≥ 0.01 when `animation=True`. Must be `0` when `animation=False`.
+</ParamField>
+
+<Warning>
+  The constructor calls `_check_values()` immediately. If any parameter is invalid it raises `MazeError("MAZEGEN ERROR", [...])` before the object is fully initialized.
+</Warning>
+
+---
+
+## Class method
+
+### `maze_from_file`
+
+```python
+@classmethod
+MazeGenerator.maze_from_file(filename: str) -> MazeGenerator
+```
+
+Parses a config file and constructs a `MazeGenerator` instance from its contents. All keyword arguments in the file are lowercased before being passed to the constructor.
+
+<ParamField path="filename" type="str" required>
+  Path to the config text file.
+</ParamField>
+
+<ResponseField name="return" type="MazeGenerator">
+  A fully initialized `MazeGenerator` instance.
+</ResponseField>
+
+Raises `MazeError("FILE ERROR", ...)` if the file cannot be found or read, and `MazeError("CONFIG ERROR", ...)` if the file content is malformed.
+
+---
+
+## Instance methods
+
+### `generate`
+
+```python
+generate() -> List[List[int]]
+```
+
+Generates the maze by resetting the grid and running the full algorithm to completion. Delegates to `perfect_algo()` when `is_perfect=True`, otherwise `non_perfect_algo()`. Both generators are consumed in full before returning.
+
+<ResponseField name="return" type="List[List[int]]">
+  The completed maze grid as a 2D list of integer bitfield cells.
+</ResponseField>
+
+---
+
+### `calculate_path`
+
+```python
+calculate_path() -> List[Tuple]
+```
+
+Runs the BFS solve algorithm from `entry` to `exit`, storing the result path internally. The `solve_algo()` generator is consumed in full.
+
+<ResponseField name="return" type="List[Tuple]">
+  The solution path as a list of `(x, y)` tuples from entry to exit.
+</ResponseField>
+
+---
+
+### `reset_maze`
+
+```python
+reset_maze() -> List[List[int]]
+```
+
+Resets the grid to all-walls-closed state (every cell = `15`), re-applies the 42 pattern if the grid is large enough, and re-seeds the RNG according to `self.seed`.
+
+<ResponseField name="return" type="List[List[int]]">
+  The freshly reset grid.
+</ResponseField>
+
+<Note>
+  `reset_maze()` is called automatically by the constructor and by `generate()`.
+</Note>
+
+---
+
+### `perfect_algo`
+
+```python
+perfect_algo() -> Generator
+```
+
+Iterative DFS generator. At each step — advancing to a new cell or backtracking — it yields the current state. Useful for step-by-step animation.
+
+<ResponseField name="yields" type="(grid, stack)">
+  `grid` is the current `List[List[int]]` maze state. `stack` is the list of `(x, y)` tuples representing the active DFS path.
+</ResponseField>
+
+---
+
+### `non_perfect_algo`
+
+```python
+non_perfect_algo() -> Generator
+```
+
+Runs `perfect_algo()` to completion first (via `yield from`), then randomly removes a proportion of internal walls to introduce loops and alternate paths. Protected cells from the 42 pattern are never modified.
+
+<ResponseField name="yields" type="(grid, mini_stack)">
+  During the DFS phase, yields match `perfect_algo`. During the extra-wall phase, yields `(grid, [(cx, cy), (nx, ny)])` for each removed wall.
+</ResponseField>
+
+---
+
+### `solve_algo`
+
+```python
+solve_algo() -> Generator
+```
+
+BFS generator that explores the maze from `entry` toward `exit`. After the generator is exhausted, `get_path()` returns the reconstructed solution.
+
+<ResponseField name="yields" type="(came_from, current_cell)">
+  `came_from` is a `dict` mapping each visited cell to its predecessor. `current_cell` is the `(x, y)` tuple just added to the frontier.
+</ResponseField>
+
+---
+
+### `get_grid`
+
+```python
+get_grid() -> List[List[int]]
+```
+
+Returns the current maze grid. Each cell is an integer from 0–15 where each bit represents a wall: North=1, East=2, South=4, West=8. A value of `15` means all four walls are closed.
+
+<ResponseField name="return" type="List[List[int]]">
+  The 2D integer grid (rows × columns).
+</ResponseField>
+
+---
+
+### `get_path`
+
+```python
+get_path() -> List[Tuple]
+```
+
+Returns the current solution path stored internally.
+
+<ResponseField name="return" type="List[Tuple]">
+  List of `(x, y)` tuples from entry to exit. Empty list if `calculate_path()` has not been called.
+</ResponseField>
+
+---
+
+### `set_path`
+
+```python
+set_path(path: List[Tuple]) -> None
+```
+
+Overrides the internally stored solution path. Used by `render_path()` during step-by-step path animation.
+
+<ParamField path="path" type="List[Tuple]" required>
+  A list of `(x, y)` coordinate tuples.
+</ParamField>
+
+---
+
+### `open_doors`
+
+```python
+open_doors(pos: tuple) -> None
+```
+
+Opens the outer wall of a border cell by clearing the appropriate wall bit. Used to carve the visible entrance and exit openings on the perimeter of the maze.
+
+- Top row (`y == 0`): clears North wall (bit 1)
+- Bottom row (`y == height - 1`): clears South wall (bit 4)
+- Left column (`x == 0`): clears West wall (bit 8)
+- Right column (`x == width - 1`): clears East wall (bit 2)
+
+<ParamField path="pos" type="tuple" required>
+  A `(x, y)` tuple that must be on the grid boundary.
+</ParamField>
+
+---
+
+### `debug_print_state`
+
+```python
+debug_print_state() -> None
+```
+
+Prints the raw integer values of every cell in the grid to stdout, formatted in aligned columns. Useful for inspecting wall states during development.

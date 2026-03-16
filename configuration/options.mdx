@@ -1,0 +1,114 @@
+---
+title: "Configuration options"
+description: "Complete reference for all A-Maze-ing configuration options."
+---
+
+Complete reference for every key accepted in the A-Maze-ing config file. See the [Config file](/configuration/config-file) page for the file format and parsing rules.
+
+## Options
+
+<ParamField path="WIDTH" type="int" required>
+  The number of columns in the maze grid. Must be ≥ 1.
+
+  For the 42 pattern to appear in the generated maze, `WIDTH` must be ≥ 9.
+
+  ```text
+  WIDTH=20
+  ```
+</ParamField>
+
+<ParamField path="HEIGHT" type="int" required>
+  The number of rows in the maze grid. Must be ≥ 1.
+
+  For the 42 pattern to appear in the generated maze, `HEIGHT` must be ≥ 7.
+
+  ```text
+  HEIGHT=15
+  ```
+</ParamField>
+
+<ParamField path="ENTRY" type="tuple (int, int)" required>
+  The maze entry point as `x,y` coordinates (0-indexed). Must be within the
+  grid bounds and must differ from `EXIT`.
+
+  ```text
+  ENTRY=0,0
+  ```
+</ParamField>
+
+<ParamField path="EXIT" type="tuple (int, int)" required>
+  The maze exit point as `x,y` coordinates (0-indexed). Must be within the
+  grid bounds and must differ from `ENTRY`.
+
+  ```text
+  EXIT=19,14
+  ```
+</ParamField>
+
+<ParamField path="OUTPUT_FILE" type="file (.txt)" required>
+  The filename to write the maze output to. Must end in `.txt`.
+
+  ```text
+  OUTPUT_FILE=maze.txt
+  ```
+</ParamField>
+
+<ParamField path="PERFECT" type="bool" required>
+  Whether to generate a perfect maze. In a perfect maze, every cell is
+  reachable via exactly one path — there are no loops and no isolated regions.
+
+  - `True` — generate a perfect maze.
+  - `False` — generate an imperfect maze with multiple possible paths.
+
+  ```text
+  PERFECT=True
+  ```
+</ParamField>
+
+<ParamField path="SEED" type="int">
+  Optional random seed for reproducible maze generation. When set, the same
+  seed always produces the same maze layout. When omitted, a different random
+  maze is generated on each run.
+
+  ```text
+  SEED=42
+  ```
+</ParamField>
+
+<ParamField path="ANIMATION" type="bool">
+  When `True`, animates the maze generation and solving process in the
+  terminal. Requires `SPEED_ANIMATION` to also be set to a value ≥ `0.01`.
+
+  ```text
+  ANIMATION=True
+  ```
+</ParamField>
+
+<ParamField path="SPEED_ANIMATION" type="float">
+  The delay in seconds between each animation frame. Minimum value: `0.01`.
+  Only used when `ANIMATION=True`.
+
+  ```text
+  SPEED_ANIMATION=0.01
+  ```
+</ParamField>
+
+## Validation rules
+
+The following constraints are enforced at startup by `_check_values` in `generator.py`:
+
+- `WIDTH` must be ≥ 1.
+- `HEIGHT` must be ≥ 1.
+- `ENTRY` and `EXIT` must be different coordinates.
+- `ENTRY` must be within the grid bounds: `(0,0)` to `(WIDTH-1, HEIGHT-1)`.
+- `EXIT` must be within the grid bounds: `(0,0)` to `(WIDTH-1, HEIGHT-1)`.
+- If `ANIMATION=True`: `SPEED_ANIMATION` must be ≥ `0.01`.
+- If `SPEED_ANIMATION` > 0: `ANIMATION` must be `True`.
+
+<Warning>
+  When the maze is large enough for the 42 pattern (`WIDTH` ≥ 9 and `HEIGHT` ≥
+  7), the pattern occupies a fixed set of cells at the centre of the grid. If
+  `ENTRY` or `EXIT` falls on one of those cells, a `MazeError` is raised. Move
+  your entry or exit point to a position outside the 42 pattern to resolve the
+  error.
+</Warning>

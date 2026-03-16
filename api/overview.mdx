@@ -1,0 +1,63 @@
+---
+title: "Package overview"
+description: "Overview of the mazegen Python package and its public exports."
+---
+
+The `mazegen` package provides a complete toolkit for generating and solving mazes programmatically. It exposes a clean public API for maze construction, pathfinding, terminal rendering, and file output.
+
+## Installation
+
+```bash
+pip install mazegen-1.0.0-py3-none-any.whl
+```
+
+## Public exports
+
+All public symbols are available directly from the top-level `mazegen` namespace:
+
+```python
+from mazegen import (
+    MazeGenerator,
+    MazeError,
+    generate_output,
+    render_maze,
+    render_solve,
+    render_generation,
+    render_path,
+    Color,
+)
+```
+
+## Quick start
+
+The following example mirrors how `a_maze_ing.py` uses the package:
+
+```python
+import mazegen
+
+maze = mazegen.MazeGenerator.maze_from_file("config.txt")
+maze.generate()
+maze.calculate_path()
+mazegen.render_maze(maze, terminal=True, show_path=True, color=mazegen.Color.CYAN)
+mazegen.generate_output(maze)
+```
+
+## Module breakdown
+
+<CardGroup cols={2}>
+  <Card title="MazeGenerator" href="/api/maze-generator">
+    Core class for maze generation and solving. Handles DFS generation, BFS pathfinding, grid state, and config file parsing.
+  </Card>
+  <Card title="Color" href="/api/visual">
+    ANSI color enum for wall and cell rendering. Includes a palette helper for cycling through valid colors.
+  </Card>
+  <Card title="Rendering functions" href="/api/visual">
+    `render_maze`, `render_generation`, `render_solve`, and `render_path` — terminal rendering functions for static and animated output.
+  </Card>
+  <Card title="generate_output" href="/api/output">
+    File output writer. Converts the maze grid to hex format and writes the grid, entry/exit coordinates, and solution path to a text file.
+  </Card>
+  <Card title="MazeError" href="/api/errors">
+    Custom exception class used throughout mazegen. Carries a category prefix and a list of individual error messages.
+  </Card>
+</CardGroup>
