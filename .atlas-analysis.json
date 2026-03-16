@@ -1,0 +1,75 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "A-Maze-ing",
+  "projectDescription": "A terminal-based maze generator and solver that uses DFS to build mazes and BFS to find the shortest path, with animated rendering, color themes, and a hidden '42' pattern easter egg.",
+  "theme": "palm",
+  "primaryColor": "#36B37E",
+  "lightColor": "#E3FFF4",
+  "darkColor": "#1A3D2E",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "installation", "quickstart"]
+          },
+          {
+            "group": "Configuration",
+            "pages": ["configuration/config-file", "configuration/options"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["guides/maze-generation", "guides/maze-solving", "guides/animation", "guides/colors", "guides/output-file"]
+          },
+          {
+            "group": "Advanced",
+            "pages": ["advanced/pattern-42", "advanced/non-perfect-mazes", "advanced/seed"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "mazegen Package",
+            "pages": ["api/overview", "api/maze-generator", "api/visual", "api/output", "api/errors"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "DFS-based perfect maze generation with randomized backtracking",
+    "Non-perfect maze mode that adds extra passages for multiple valid paths",
+    "BFS solver that finds the shortest path from entry to exit",
+    "Animated maze generation and solving in the terminal",
+    "Multiple color themes (CYAN, BLUE, PURPLE, YELLOW)",
+    "Hidden '42' pattern easter egg embedded in mazes of sufficient size",
+    "Configurable via a simple KEY=VALUE text file",
+    "Exports maze to a .txt file in hexadecimal grid format with entry, exit, and path directions",
+    "Optional seeded generation for reproducible mazes"
+  ],
+  "publicApiSurface": [
+    "MazeGenerator(width, height, entry, exit, seed, perfect, output_file, animation, speed_animation)",
+    "MazeGenerator.maze_from_file(filename)",
+    "MazeGenerator.generate()",
+    "MazeGenerator.calculate_path()",
+    "MazeGenerator.perfect_algo()",
+    "MazeGenerator.non_perfect_algo()",
+    "MazeGenerator.solve_algo()",
+    "MazeGenerator.reset_maze()",
+    "MazeGenerator.get_grid()",
+    "MazeGenerator.get_path()",
+    "MazeGenerator.set_path(path)",
+    "MazeGenerator.open_doors(pos)",
+    "render_maze(maze, show_path, color, terminal, stack, path)",
+    "render_generation(maze, wall_color)",
+    "render_solve(maze, color)",
+    "render_path(maze, animated_path, wall_color)",
+    "generate_output(maze)",
+    "Color.get_pallete()",
+    "MazeError(prefix, errors)"
+  ]
+}
